@@ -845,12 +845,12 @@ function Mount-FslDisk {
         while ($partitionType -eq $false -and $timespan -gt (Get-Date)) {
 
             try {
-                $allPartition = Get-Partition -DiskNumber $mountedDisk.Number -ErrorAction Stop
+       		 $allPartition = Get-Partition -DiskNumber $mountedDisk.Number -ErrorAction Stop
 
-                if ($allPartition.Type -contains 'Basic') {
-                    $partitionType = $true
-                    $partition = $allPartition | Where-Object -Property 'Type' -EQ -Value 'Basic'
-                }
+       		 if ($allPartition.Type -contains 'Basic' -or $allPartition.Type -contains 'IFS') {
+            $partitionType = $true
+            $partition = $allPartition | Where-Object { $_.Type -eq "Basic" -or $_.Type -eq "IFS" }
+        	}
             }
             catch {
                 if (($allPartition | Measure-Object).Count -gt 0) {
@@ -1151,7 +1151,7 @@ function Optimize-OneDisk {
         $partInfo = $null
         while (($partInfo | Measure-Object).Count -lt 1 -and $timespan -gt (Get-Date)) {
             try {
-                $partInfo = Get-Partition -DiskNumber $mount.DiskNumber -ErrorAction Stop | Where-Object -Property 'Type' -EQ -Value 'Basic' -ErrorAction Stop
+                $partInfo = Get-Partition -DiskNumber $mount.DiskNumber -ErrorAction Stop | Where-Object { $.Type -eq "Basic" -or $.Type -eq "IFS"}  -ErrorAction Stop
             }
             catch {
                 $partInfo = Get-Partition -DiskNumber $mount.DiskNumber -ErrorAction SilentlyContinue | Select-Object -Last 1
@@ -1321,7 +1321,7 @@ function Optimize-OneDisk {
             #Now we need to reinflate the partition to its previous size
             try {
                 $mount = Mount-FslDisk -Path $Disk.FullName -PassThru
-                $partInfo = Get-Partition -DiskNumber $mount.DiskNumber | Where-Object -Property 'Type' -EQ -Value 'Basic'
+                $partInfo = Get-Partition -DiskNumber $mount.DiskNumber | Where-Object { $.Type -eq "Basic" -or $.Type -eq "IFS"} 
                 Resize-Partition -InputObject $partInfo -Size $sizeMax -ErrorAction Stop
                 $paramWriteVhdOutput = @{
                     DiskState = "Success"
@@ -1863,7 +1863,7 @@ function Optimize-OneDisk {
         $partInfo = $null
         while (($partInfo | Measure-Object).Count -lt 1 -and $timespan -gt (Get-Date)) {
             try {
-                $partInfo = Get-Partition -DiskNumber $mount.DiskNumber -ErrorAction Stop | Where-Object -Property 'Type' -EQ -Value 'Basic' -ErrorAction Stop
+                $partInfo = Get-Partition -DiskNumber $mount.DiskNumber -ErrorAction Stop | Where-Object { $.Type -eq "Basic" -or $.Type -eq "IFS"}  -ErrorAction Stop
             }
             catch {
                 $partInfo = Get-Partition -DiskNumber $mount.DiskNumber -ErrorAction SilentlyContinue | Select-Object -Last 1
@@ -2033,7 +2033,7 @@ function Optimize-OneDisk {
             #Now we need to reinflate the partition to its previous size
             try {
                 $mount = Mount-FslDisk -Path $Disk.FullName -PassThru
-                $partInfo = Get-Partition -DiskNumber $mount.DiskNumber | Where-Object -Property 'Type' -EQ -Value 'Basic'
+                $partInfo = Get-Partition -DiskNumber $mount.DiskNumber | Where-Object { $.Type -eq "Basic" -or $.Type -eq "IFS"}
                 Resize-Partition -InputObject $partInfo -Size $sizeMax -ErrorAction Stop
                 $paramWriteVhdOutput = @{
                     DiskState = "Success"
